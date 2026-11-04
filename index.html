@@ -3480,8 +3480,8 @@ html body .table-scroll,html body .table-wrap{max-width:100%;overflow:auto}
 &lt;header class=&quot;attendance-hero&quot;&gt;
   &lt;div class=&quot;hero-inner&quot;&gt;
     &lt;span class=&quot;hero-mark&quot; aria-hidden=&quot;true&quot;&gt;DA&lt;/span&gt;
-    &lt;div class=&quot;hero-copy&quot;&gt;&lt;span class=&quot;hero-eyebrow&quot;&gt;DAMAN GROUP · PEOPLE OPERATIONS&lt;/span&gt;&lt;h1&gt;Driver Attandance Record&lt;/h1&gt;&lt;p&gt;Present / Absent Report • November 2026&lt;/p&gt;&lt;/div&gt;
-    &lt;div class=&quot;hero-source&quot; title=&quot;nov Attandance&quot;&gt;&lt;small&gt;SOURCE TABS&lt;/small&gt;&lt;strong&gt;November 2026&lt;/strong&gt;&lt;/div&gt;
+    &lt;div class=&quot;hero-copy&quot;&gt;&lt;span class=&quot;hero-eyebrow&quot;&gt;DAMAN GROUP · PEOPLE OPERATIONS&lt;/span&gt;&lt;h1&gt;Driver Attandance Record&lt;/h1&gt;&lt;p&gt;Present / Absent Report • April–September 2026&lt;/p&gt;&lt;/div&gt;
+    &lt;div class=&quot;hero-source&quot; title=&quot;April Month, May Month, June Month, July Month, Aug Attendance, Sep Attendance&quot;&gt;&lt;small&gt;SOURCE TABS&lt;/small&gt;&lt;strong&gt;Apr–Sep 2026&lt;/strong&gt;&lt;/div&gt;
   &lt;/div&gt;
 &lt;/header&gt;
 &lt;main class=&quot;attendance-shell&quot;&gt;
@@ -3522,9 +3522,9 @@ html body .table-scroll,html body .table-wrap{max-width:100%;overflow:auto}
   &lt;p class=&quot;footer-note&quot;&gt;Rule: an attendance cell containing &lt;b&gt;CG&lt;/b&gt; counts as &lt;b&gt;Present&lt;/b&gt;. A blank cell, OFF or any other text counts as &lt;b&gt;Absent&lt;/b&gt;. The sheet must be shared as &lt;b&gt;Anyone with the link → Viewer&lt;/b&gt;.&lt;/p&gt;
 &lt;/main&gt;
 &lt;script&gt;
-/* Attendance comes from the November tab in this Google Sheet. */
+/* Attendance comes from the six monthly tabs in this Google Sheet. */
 const SHEET_ID = &#x27;1jS7ofSj__BwwRxazuWeBtMSfLEU6FTkbYUno-IyEZPE&#x27;;
-const ATTENDANCE_TAB = &#x27;nov Attandance&#x27;;
+const ATTENDANCE_TAB = &#x27;All Month Attendace&#x27;;
 const STORE_SHEET_ID = &#x27;1d78nFog-LDdK6un3c8IvshnMm4Y_n9iQE9wNOcE1oPQ&#x27;;
 const STORE_SHEET_NAME = &#x27;Store&#x27;;
 let allRecords = [], filteredRecords = [], selectedDate = null;
@@ -3578,29 +3578,14 @@ function attendanceHeaderDate(value){
   const actual=new Date(date+&#x27;T00:00:00Z&#x27;);return !Number.isNaN(+actual)&amp;&amp;actual.toISOString().slice(0,10)===date?date:&#x27;&#x27;;
 }
 function parseAttendance(rows){
-  const legacyHead=rows.findIndex(row=&gt;norm(row[0])===&#x27;driverid&#x27;&amp;&amp;row.slice(3).some(value=&gt;attendanceHeaderDate(value)));
-  if(legacyHead&gt;=0){
-    const dateColumns=rows[legacyHead].map((value,i)=&gt;({i,date:i&gt;=3?attendanceHeaderDate(value):&#x27;&#x27;})).filter(col=&gt;col.date);
-    const out=[];
-    for(const raw of rows.slice(legacyHead+1)){
-      const id=clean(raw[0]),name=clean(raw[1]);
-      if(!id||/^(driverid|total|subtotal|count)$/i.test(norm(id)))continue;
-      for(const col of dateColumns){const value=clean(raw[col.i]);out.push({date:col.date,driverId:id,driverName:name,vehicle:value,status:/^cg/i.test(value)?&#x27;Present&#x27;:&#x27;Absent&#x27;});}
-    }
-    return out;
-  }
-  const monthHead=rows.findIndex(row=&gt;norm(row[0])===&#x27;attendancesheet&#x27;&amp;&amp;row.slice(4).some(value=&gt;attendanceHeaderDate(value)));
-  if(monthHead&lt;0)throw new Error(&#x27;November Attendance: dated columns not found&#x27;);
-  const dateColumns=rows[monthHead].map((value,i)=&gt;({i,date:i&gt;=4?attendanceHeaderDate(value):&#x27;&#x27;})).filter(col=&gt;col.date);
+  const headAt=rows.findIndex(row=&gt;norm(row[0])===&#x27;driverid&#x27;&amp;&amp;row.slice(3).some(value=&gt;attendanceHeaderDate(value)));
+  if(headAt&lt;0)throw new Error(&#x27;All Month Attendace: dated columns not found&#x27;);
+  const dateColumns=rows[headAt].map((value,i)=&gt;({i,date:i&gt;=3?attendanceHeaderDate(value):&#x27;&#x27;})).filter(col=&gt;col.date);
   const out=[];
-  for(const raw of rows.slice(monthHead+1)){
-    const id=clean(raw[1]),name=clean(raw[2]);
-    if(!id||/^(sno|serial|driverid|total|subtotal|count)$/i.test(norm(id)))continue;
-    for(const col of dateColumns){
-      const vehicle=clean(raw[col.i]),checked=clean(raw[col.i+1]).toLowerCase();
-      const status=checked===&#x27;true&#x27;?&#x27;Present&#x27;:checked===&#x27;false&#x27;?&#x27;Absent&#x27;:/^cg/i.test(vehicle)?&#x27;Present&#x27;:&#x27;Absent&#x27;;
-      out.push({date:col.date,driverId:id,driverName:name,vehicle,status});
-    }
+  for(const raw of rows.slice(headAt+1)){
+    const id=clean(raw[0]),name=clean(raw[1]);
+    if(!id||/^(driverid|total|subtotal|count)$/i.test(norm(id)))continue;
+    for(const col of dateColumns){const value=clean(raw[col.i]);out.push({date:col.date,driverId:id,driverName:name,vehicle:value,status:/^cg/i.test(value)?&#x27;Present&#x27;:&#x27;Absent&#x27;});}
   }
   return out;
 }
